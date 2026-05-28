@@ -110,6 +110,8 @@ static drawseg_xrange_item_t *drawsegs_xrange;
 static size_t drawsegs_xrange_size = 0;
 static INT32 drawsegs_xrange_count = 0;
 
+#define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
+
 // ==========================================================================
 //
 // Sprite loading routines: support sprites in pwad, dehacked sprite renaming,
@@ -1104,8 +1106,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
 	{
 		// Specialized affine drawing functions, primarily for player sprites.
 
-		// romoney5 TODO
-		/*if (dc_translation) // translate green skin to another color
+		if (dc_translation) // translate green skin to another color
 		{
 			if (vis->transmap)
 			{
@@ -1125,7 +1126,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
 		else
 		{
 			colfunc = colfuncs[COLDRAWFUNC_AFFINE];
-		}*/
+		}
 	}
 	// Hack: Use a special column function for drop shadows that bypasses
 	// invalid memory access crashes caused by R_ProjectDropShadow putting wrong values
@@ -1144,7 +1145,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
 		dc_colormap = colormaps;
 
 	dc_texturemid = vis->texturemid;
-	dc_texheight = 0;
+	dc_texheight = patch->height;
 
 	frac = vis->startfrac;
 	windowtop = windowbottom = sprbotscreen = INT32_MAX;
@@ -1225,10 +1226,7 @@ static void R_DrawVisSprite(vissprite_t *vis)
 			sprbotscreen = sprtopscreen + fixed_ylen;
 		}*/
 
-		// romoney5 TODO: code duplicatio
-#define sign(x) (x > 0) ? 1 : ((x < 0) ? -1 : 0)
 		fixed_t xstep = sign(vis->xiscale) * FRACUNIT;
-#undef sign
 
 		dc_affineystep = (vis->cut & SC_VFLIP) ? -FRACUNIT : FRACUNIT;
 
@@ -1297,19 +1295,19 @@ static void R_DrawVisSprite(vissprite_t *vis)
 					dc_yl = 0;
 				if (dc_yh >= vid.height) // dc_yl must be < vid.height, so reduces number of checks in tight loop
 					dc_yh = vid.height - 1;
-			
-				// romoney5 TODO: all instances of baseclip
+				
 				/*if (dc_yh >= baseclip && baseclip != -1)
 					dc_yh = baseclip;*/
 
-				column = &patch->columns[texturecolumn];
+				dc_frac = texturecolumn;
 
-				localcolfunc(column, lengthcol);
+				colfunc();
 			}
 		}
 		else
 		{
 			// Non-paper drawing loop
+			INT32 texturecolumn = 0;
 			for (dc_x = vis->x1; dc_x <= vis->x2; dc_x++, frac += xstep, sprtopscreen += vis->shear.tan)
 			{
 				INT32 topscreen = sprtopscreen + spryscale*0;
@@ -1351,13 +1349,11 @@ static void R_DrawVisSprite(vissprite_t *vis)
 
 				if (dc_yl <= dc_yh && dc_yh > 0 && fixed_ylen != 0)
 				{
-					//dc_frac = frac; // romoney5 TODO
-					INT32 texturecolumn = frac;
+					dc_frac = frac;
 
-					column = &patch->columns[texturecolumn];
-
-					localcolfunc(column, lengthcol);
+					colfunc();
 				}
+				texturecolumn += FRACUNIT;
 			}
 		}
 
@@ -1416,21 +1412,6 @@ static void R_DrawVisSprite(vissprite_t *vis)
 		{
 			column = &patch->columns[frac>>FRACBITS];
 			localcolfunc (column, lengthcol);
-// romoney5 TODO
-/*
-		// Non-paper drawing loop
-		for (dc.x = vis->x1; dc.x <= vis->x2; dc_x++, frac += vis->xiscale, sprtopscreen += vis->shear.tan)
-		{
-			texturecolumn = clamp<fixed_t>(frac >> FRACBITS, 0, patch->width - 1);
-
-			column = (column_t *)((UINT8 *)patch->columns + (patch->columnofs[texturecolumn]));
-
-			if (bmpatch)
-				bmcol = (column_t *)((UINT8 *)bmpatch->columns + (bmpatch->columnofs[texturecolumn]));
-
-			localcolfunc (&dc, column, bmcol, baseclip);
->>>>>>> 6e99c9b5cd (Merge pull request '[FEAT] Affine sprite rendering' (#223) from softwarehell into next):src/r_things.cpp
-*/
 		}
 	}
 
@@ -2048,7 +2029,7 @@ static void R_ProjectSprite(mobj_t *thing)
 		return;
 
 	// Affines
-	boolean affinesprite = ((thing->player != NULL) || R_ThingIsAffineSprite(thing));
+	boolean affinesprite = R_ThingIsAffineSprite(thing);
 	affine_t affine_transform = {0};
 	affine_bounding_t affine_bounds = {0};
 	vector2_t affine_scale = {0};
@@ -2269,9 +2250,11 @@ static void R_ProjectSprite(mobj_t *thing)
 	spritexscale = interp.spritexscale;
 	spriteyscale = interp.spriteyscale;
 
+	fixed_t highresscale = FRACUNIT;
+
 	if (thing->skin && ((skin_t *)thing->skin)->flags & SF_HIRES)
 	{
-		fixed_t highresscale = ((skin_t *)thing->skin)->highresscale;
+		highresscale = ((skin_t *)thing->skin)->highresscale;
 		/*spritexscale = FixedMul(spritexscale, highresscale);
 		spriteyscale = FixedMul(spriteyscale, highresscale);
 		fixed_t high_res = ((skin_t *)thing->skin)->highresscale;*/
@@ -2286,9 +2269,7 @@ static void R_ProjectSprite(mobj_t *thing)
 	{
 		spr_offset = interp.spritexoffset;
 		spr_topoffset = interp.spriteyoffset;
-		// romoney5 TODO
-		/*
-=======
+	}
 #ifdef ROTSPRITE
 	// initialize and rotate pitch/roll vectors
 	visoffs.x = 0;
@@ -2296,13 +2277,13 @@ static void R_ProjectSprite(mobj_t *thing)
 	rotoffset.x = 0;
 	rotoffset.y = 0;
 
-	const fixed_t visoffs_xsc = (affinesprite) ? xscale : FixedDiv(FRACUNIT, mapobjectscale);
+	const fixed_t visoffs_xsc = (affinesprite) ? xscale : FRACUNIT;//FixedDiv(FRACUNIT, mapobjectscale);
 
 	const fixed_t visoffymul = (vflip ? -FRACUNIT : FRACUNIT);
 
-	if (R_ThingIsUsingBakedOffsets(interptarg))
+	/*if (R_ThingIsUsingBakedOffsets(thing))
 	{
-		R_RotateSpriteOffsetsByPitchRoll(interptarg,
+		R_RotateSpriteOffsetsByPitchRoll(thing,
 										 vflip,
 										 hflip,
 										 affinesprite,
@@ -2311,7 +2292,7 @@ static void R_ProjectSprite(mobj_t *thing)
 										 &rotoffset);
 
 		rotoffset.x *= FRACUNIT;
-	}
+	}*/
 #endif
 
 	if (affinesprite)
@@ -2341,8 +2322,8 @@ static void R_ProjectSprite(mobj_t *thing)
 		angle = R_ConvToRollAngle(spriterotangle) * flipsign;
 
 		const boolean renderflip = ((thing->renderflags & RF_FLIPOFFSETS) == RF_FLIPOFFSETS);
-		const fixed_t rolloffs_x = FixedDiv(interptarg->rollingxoffset * FRACUNIT, highresscale) * (((!renderflip) && flip) ? -1 : 1);
-		const fixed_t rolloffs_y = FixedDiv(interptarg->rollingyoffset * FRACUNIT, highresscale) * (((!renderflip) && vflip) ? -1 : 1);
+		const fixed_t rolloffs_x = 0;//FixedDiv(thing->rollingxoffset * FRACUNIT, highresscale) * (((!renderflip) && flip) ? -1 : 1);
+		const fixed_t rolloffs_y = 0;//FixedDiv(thing->rollingyoffset * FRACUNIT, highresscale) * (((!renderflip) && vflip) ? -1 : 1);
 		fixed_t y_piv = affine_pivot.y;
 
 		if (vflip)
@@ -2351,9 +2332,10 @@ static void R_ProjectSprite(mobj_t *thing)
 			y_piv = (patch->height * FRACUNIT) - y_piv;
 		}
 
-		fixed_t sa = FSIN(angle), ca = FCOS(angle);
+		//fixed_t sa = FSIN(angle), ca = FCOS(angle);
+		fixed_t sa = FINESINE(angle >> ANGLETOFINESHIFT), ca = FINECOSINE(angle >> ANGLETOFINESHIFT);
 
-		if (R_AffinePreScale(interptarg))
+		if (R_AffinePreScale(thing))
 		{
 			affine_transform.a = FixedDiv(ca, affine_scale.x);
 			affine_transform.b = FixedDiv(-sa, affine_scale.x);
@@ -2384,7 +2366,8 @@ static void R_ProjectSprite(mobj_t *thing)
 		spriteyscale = FRACUNIT;
 	}
 
-	fixed_t thingyoffset = (FixedDiv(interp.spriteyoffset, highresscale) + FixedDiv((visoffs.y * visoffymul), mapobjectscale) + ((affinesprite) ? 0 : (rotoffset.y * visoffymul)));
+	//fixed_t thingyoffset = (FixedDiv(interp.spriteyoffset, highresscale) + FixedDiv((visoffs.y * visoffymul), mapobjectscale) + ((affinesprite) ? 0 : (rotoffset.y * visoffymul)));
+	fixed_t thingyoffset = (FixedDiv(interp.spriteyoffset, highresscale) + (visoffs.y * visoffymul) + ((affinesprite) ? 0 : (rotoffset.y * visoffymul)));
 
 	if (thing->renderflags & RF_ABSOLUTEOFFSETS)
 	{
@@ -2394,7 +2377,6 @@ static void R_ProjectSprite(mobj_t *thing)
 #else
 		spr_topoffset = FixedDiv(interp.spriteyoffset, highresscale);
 #endif
->>>>>>> 6e99c9b5cd (Merge pull request '[FEAT] Affine sprite rendering' (#223) from softwarehell into next):src/r_things.cpp*/
 	}
 	else
 	{
@@ -2403,12 +2385,7 @@ static void R_ProjectSprite(mobj_t *thing)
 		if ((thing->renderflags & RF_FLIPOFFSETS) && flip)
 			flipoffset = -1;
 
-//<<<<<<< HEAD:src/r_things.c
 		spr_offset += interp.spritexoffset * flipoffset;
-		spr_topoffset += interp.spriteyoffset * flipoffset;
-		// romoney5 TODO you get the drill
-/*=======
-		spr_offset += FixedDiv(interp.spritexoffset, highresscale) * flipoffset;
 #ifdef ROTSPRITE
 		thingyoffset *= flipoffset;
 
@@ -2417,9 +2394,8 @@ static void R_ProjectSprite(mobj_t *thing)
 
 		spr_topoffset += thingyoffset;
 #else
-		spr_topoffset += FixedDiv(interp.spriteyoffset, highresscale) * flipoffset;
+		spr_topoffset += interp.spriteyoffset * flipoffset;
 #endif
->>>>>>> 6e99c9b5cd (Merge pull request '[FEAT] Affine sprite rendering' (#223) from softwarehell into next):src/r_things.cpp*/
 	}
 
 	if (flip)
@@ -2427,9 +2403,6 @@ static void R_ProjectSprite(mobj_t *thing)
 	else
 		offset = -spr_offset;
 
-	// romoney5 TODO you get the drill
-/*<<<<<<< HEAD:src / r_things.c
-=======
 #ifdef ROTSPRITE
 	if (visoffs.x)
 	{
@@ -2442,7 +2415,6 @@ static void R_ProjectSprite(mobj_t *thing)
 	}
 #endif
 
->>>>>>> 6e99c9b5cd (Merge pull request '[FEAT] Affine sprite rendering' (#223) from softwarehell into next):src/r_things.cpp*/
 	offset = FixedMul(offset, FixedMul(spritexscale, this_scale));
 	offset2 = FixedMul(spr_width, FixedMul(spritexscale, this_scale));
 
@@ -2941,9 +2913,7 @@ static void R_ProjectSprite(mobj_t *thing)
 		if (affinesprite)
 		{
 			// Affines are, code-wise, "1-to-1 scale", so we always move in whole movements for them.
-#define sign(x) (x > 0) ? 1 : ((x < 0) ? -1 : 0)
 			xpush = sign(vis->xiscale) * FRACUNIT;
-#undef sign
 		}
 
 
