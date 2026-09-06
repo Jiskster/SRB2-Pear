@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2024 by Sonic Team Junior.
+// Copyright (C) 1999-2025 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -413,7 +413,7 @@ static void CheckFrame(const char *sprname)
 		{
 		case SRF_NONE:
 			// no rotations were found for that frame at all
-			I_Error("R_AddSingleSpriteDef: No patches found for %s", framedescription);
+			CONS_Alert(CONS_ERROR, "R_AddSingleSpriteDef: No patches found for %s\n", framedescription);
 			break;
 
 		case SRF_SINGLE:
@@ -423,8 +423,8 @@ static void CheckFrame(const char *sprname)
 		case SRF_2D: // both Left and Right rotations
 			// we test to see whether the left and right slots are present
 			if ((spriteframe->lumppat[2] == LUMPERROR) || (spriteframe->lumppat[6] == LUMPERROR))
-				I_Error("R_AddSingleSpriteDef: Sprite %s is missing rotations (L-R mode)",
-				framedescription);
+				CONS_Alert(CONS_ERROR, "R_AddSingleSpriteDef: Sprite %s is missing rotations (L-R mode)\n",
+					framedescription);
 			break;
 
 		default:
@@ -436,7 +436,7 @@ static void CheckFrame(const char *sprname)
 					// we test the patch lump, or the id lump whatever
 					// if it was not loaded the two are LUMPERROR
 					if (spriteframe->lumppat[rotation] == LUMPERROR)
-						I_Error("R_AddSingleSpriteDef: Sprite %s is missing rotations (1-%c mode)",
+						CONS_Alert(CONS_ERROR, "R_AddSingleSpriteDef: Sprite %s is missing rotations (1-%c mode)\n",
 								framedescription, ((spriteframe->rotate & SRF_3DGE) ? 'G' : '8'));
 				}
 			}
@@ -489,7 +489,10 @@ boolean R_AddSingleSpriteDef(const char *sprname, spritedef_t *spritedef, UINT16
 	for (l = startlump; l < endlump; l++)
 	{
 		if (longname && W_IsLumpFolder(wadnum, l))
-			I_Error("R_AddSingleSpriteDef: all frame lumps for a sprite should be contained inside a single folder\n");
+		{
+			CONS_Alert(CONS_ERROR, "R_AddSingleSpriteDef: all frame lumps for a sprite should be contained inside a single folder\n");
+			return false;
+		}
 
 		// For long sprites, the startlump-endlump range only includes
 		// relevant lumps, so no check needed in that case
@@ -506,7 +509,7 @@ boolean R_AddSingleSpriteDef(const char *sprname, spritedef_t *spritedef, UINT16
 
 			if (!good) // Give an actual NAME error -_-...
 			{
-				CONS_Alert(CONS_WARNING, M_GetText("Bad sprite name: %s\n"), W_CheckNameForNumPwad(wadnum,l));
+				CONS_Alert(CONS_ERROR, M_GetText("Bad sprite name: %s\n"), W_CheckNameForNumPwad(wadnum,l));
 				continue;
 			}
 
@@ -786,7 +789,7 @@ void R_InitSprites(void)
 	{
 		R_AddSkins((UINT16)i, true);
 		R_PatchSkins((UINT16)i, true);
-		R_LoadSpriteInfoLumps(i, wadfiles[i]->numlumps);
+		R_LoadSpriteInfoLumps(i);
 	}
 	ST_ReloadSkinFaceGraphics();
 
@@ -961,12 +964,21 @@ void R_DrawFlippedMaskedColumn(column_t *column, unsigned lengthcol)
 	dc_texturemid = basetexturemid;
 }
 
-UINT8 *R_GetTranslationForThing(mobj_t *mobj, skincolornum_t color, UINT16 translation)
+INT32 R_GetTranslationIndexForThing(mobj_t *mobj, skincolornum_t color)
 {
 	INT32 skinnum = TC_DEFAULT;
 
-	boolean is_player = mobj->skin && mobj->sprite == SPR_PLAY;
-	if (is_player) // This thing is a player!
+	if (R_ThingIsFlashing(mobj)) // Bosses "flash"
+	{
+		if (mobj->type == MT_CYBRAKDEMON || mobj->colorized)
+			return TC_ALLWHITE;
+		else if (mobj->type == MT_METALSONIC_BATTLE)
+			return TC_METALSONIC;
+		else
+			return TC_BOSS;
+	}
+
+	if (mobj->skin && mobj->sprite == SPR_PLAY) // This thing is a player!
 		skinnum = ((skin_t*)mobj->skin)->skinnum;
 
 	if (color != SKINCOLOR_NONE)
@@ -987,25 +999,42 @@ UINT8 *R_GetTranslationForThing(mobj_t *mobj, skincolornum_t color, UINT16 trans
 		}
 	}
 
-	if (R_ThingIsFlashing(mobj)) // Bosses "flash"
+	return skinnum;
+}
+
+UINT8 *R_GetTranslationForThing(mobj_t *mobj, skincolornum_t color, UINT16 translation)
+{
+	INT32 skinnum = R_GetTranslationIndexForThing(mobj, color);
+
+	boolean use_translation_colormap = color != SKINCOLOR_NONE;
+
+	if (skinnum == TC_ALLWHITE || skinnum == TC_METALSONIC || skinnum == TC_DASHMODE)
 	{
-		if (mobj->type == MT_CYBRAKDEMON || mobj->colorized)
-			return R_GetTranslationColormap(TC_ALLWHITE, 0, GTC_CACHE);
-		else if (mobj->type == MT_METALSONIC_BATTLE)
-			return R_GetTranslationColormap(TC_METALSONIC, 0, GTC_CACHE);
-		else
-			return R_GetTranslationColormap(TC_BOSS, color, GTC_CACHE);
+		use_translation_colormap = true;
+
+		// Those translations don't support color remapping, so they
+		// will use SKINCOLOR_NONE always and reduce memory usage.
+		color = SKINCOLOR_NONE;
 	}
-	else if (translation != 0)
+	else if (skinnum == TC_BOSS)
 	{
-		UINT8 *tr = R_GetTranslationRemap(translation, color, skinnum);
-		if (tr != NULL)
-			return tr;
+		use_translation_colormap = true;
 	}
-	else if (color != SKINCOLOR_NONE)
+
+	if (translation != 0)
+	{
+		return R_GetTranslationRemap(translation, color, skinnum);
+	}
+	else if (use_translation_colormap)
+	{
 		return R_GetTranslationColormap(skinnum, color, GTC_CACHE);
-	else if (mobj->sprite == SPR_PLAY) // Looks like a player, but doesn't have a color? Get rid of green sonic syndrome.
-		return R_GetTranslationColormap(TC_DEFAULT, SKINCOLOR_BLUE, GTC_CACHE);
+	}
+	else if (mobj->sprite == SPR_PLAY && (skinnum >= 0 && skinnum < numskins))
+	{
+		// Looks like a player, but doesn't have a color?
+		// Use the skin's prefcolor.
+		return R_GetTranslationColormap(TC_DEFAULT, skins[skinnum]->prefcolor, GTC_CACHE);
+	}
 
 	return NULL;
 }
@@ -2009,7 +2038,7 @@ static void R_ProjectSprite(mobj_t *thing)
 	fixed_t gz = 0, gzt = 0;
 	INT32 heightsec, phs;
 	INT32 light = 0;
-	fixed_t this_scale;
+	fixed_t this_scale, highresscale;
 	fixed_t spritexscale, spriteyscale;
 
 	// rotsprite
@@ -2996,6 +3025,10 @@ static void R_ProjectPrecipitationSprite(precipmobj_t *thing)
 	// uncapped/interpolation
 	interpmobjstate_t interp = {0};
 
+	// Do this here so the precip sprite doesn't jitter at the beginning of a gametic
+	if (!paused && thing->lastupdatetime < gametic)
+		R_ResetPrecipitationMobjInterpolationState(thing);
+
 	// do interpolation
 	if (R_UsingFrameInterpolation() && !paused)
 	{
@@ -3143,13 +3176,14 @@ static void R_ProjectPrecipitationSprite(precipmobj_t *thing)
 
 weatherthink:
 	// okay... this is a hack, but weather isn't networked, so it should be ok
-	if (!(thing->precipflags & PCF_THUNK))
+	if (!(paused || P_AutoPause()) && thing->lastupdatetime < gametic)
 	{
 		if (thing->precipflags & PCF_RAIN)
 			P_RainThinker(thing);
 		else
 			P_SnowThinker(thing);
-		thing->precipflags |= PCF_THUNK;
+
+		thing->lastupdatetime = gametic;
 	}
 }
 

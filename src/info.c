@@ -2,7 +2,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 1993-1996 by id Software, Inc.
 // Copyright (C) 1998-2000 by DooM Legacy Team.
-// Copyright (C) 1999-2024 by Sonic Team Junior.
+// Copyright (C) 1999-2025 by Sonic Team Junior.
 //
 // This program is free software distributed under the
 // terms of the GNU General Public License, version 2.
@@ -4187,7 +4187,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		S_NULL,         // painstate
 		0,              // painchance
 		sfx_None,       // painsound
-		S_NULL,         // meleestate
+		S_JETFUMEFLASH, // meleestate
 		S_NULL,         // missilestate
 		S_NULL,         // deathstate
 		S_NULL,         // xdeathstate
@@ -4518,7 +4518,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		sfx_pop,        // deathsound
 		0,              // speed
 		12*FRACUNIT,    // radius
-		64*FRACUNIT,    // height
+		32*FRACUNIT,    // height
 		0,              // display offset
 		100,            // mass
 		0,              // damage
@@ -6980,7 +6980,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -7034,7 +7034,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_APPLYSLOPE, // flags
 		S_BLUESPHEREBONUS // raisestate
 	},
 
@@ -7487,7 +7487,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -9998,7 +9998,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		1,              // damage
 		sfx_None,       // activesound
-		MF_SOLID|MF_PUSHABLE|MF_SLIDEME, // flags
+		MF_SOLID|MF_PUSHABLE|MF_SLIDEME|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -12428,7 +12428,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		1,              // damage
 		sfx_s3k64,      // activesound
-		MF_SPECIAL|MF_BOUNCE,      // flags
+		MF_SPECIAL|MF_BOUNCE|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -12455,7 +12455,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		1,              // damage
 		sfx_s3k64,      // activesound
-		MF_SPECIAL|MF_BOUNCE,      // flags
+		MF_SPECIAL|MF_BOUNCE|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18617,7 +18617,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_bouncering,  // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18644,7 +18644,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_railring,    // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18671,7 +18671,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_infinityring,// mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18698,7 +18698,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_automaticring, // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18725,7 +18725,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_explosionring, // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18752,7 +18752,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_scatterring, // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18779,7 +18779,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_grenadering, // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18807,7 +18807,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_bouncering,  // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18834,7 +18834,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_railring,    // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18861,7 +18861,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_automaticring, // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18888,7 +18888,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_explosionring, // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18915,7 +18915,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_scatterring, // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -18942,7 +18942,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		pw_grenadering, // mass
 		2*TICRATE,      // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_NOGRAVITY|MF_NOCLIPHEIGHT|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -19158,7 +19158,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_APPLYSLOPE, // flags
 		S_NULL          // raisestate
 	},
 
@@ -19994,7 +19994,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		100,            // mass
 		0,              // damage
 		sfx_None,       // activesound
-		MF_SLIDEME|MF_SPECIAL, // flags
+		MF_SLIDEME|MF_SPECIAL|MF_APPLYSLOPE, // flags
 		S_NIGHTSCHIPBONUS // raisestate
 	},
 
@@ -21184,7 +21184,7 @@ mobjinfo_t mobjinfo[NUMMOBJTYPES] =
 		0,              // mass
 		0,              // damage
 		sfx_rocks1,     // activesound
-		MF_PAIN|MF_BOUNCE,  // flags
+		MF_PAIN|MF_BOUNCE|MF_APPLYSLOPE,  // flags
 		S_NULL          // raisestate
 	},
 
@@ -22077,91 +22077,4 @@ void P_PatchInfoTables(void)
 	}
 	for (i = MT_FIRSTFREESLOT; i <= MT_LASTFREESLOT; i++)
 		mobjinfo[i].doomednum = -1;
-}
-
-#ifdef ALLOW_RESETDATA
-static char *sprnamesbackup;
-static state_t *statesbackup;
-static mobjinfo_t *mobjinfobackup;
-static skincolor_t *skincolorsbackup;
-static size_t sprnamesbackupsize, statesbackupsize, mobjinfobackupsize, skincolorsbackupsize;
-#endif
-
-void P_BackupTables(void)
-{
-#ifdef ALLOW_RESETDATA
-	// Allocate buffers in size equal to that of the uncompressed data to begin with
-	sprnamesbackup = Z_Malloc(sizeof(sprnames), PU_STATIC, NULL);
-	statesbackup = Z_Malloc(sizeof(states), PU_STATIC, NULL);
-	mobjinfobackup = Z_Malloc(sizeof(mobjinfo), PU_STATIC, NULL);
-	skincolorsbackup = Z_Malloc(sizeof(skincolors), PU_STATIC, NULL);
-
-	// Sprite names
-	sprnamesbackupsize = lzf_compress(sprnames, sizeof(sprnames), sprnamesbackup, sizeof(sprnames));
-	if (sprnamesbackupsize > 0)
-		sprnamesbackup = Z_Realloc(sprnamesbackup, sprnamesbackupsize, PU_STATIC, NULL);
-	else
-		M_Memcpy(sprnamesbackup, sprnames, sizeof(sprnames));
-
-	// States
-	statesbackupsize = lzf_compress(states, sizeof(states), statesbackup, sizeof(states));
-	if (statesbackupsize > 0)
-		statesbackup = Z_Realloc(statesbackup, statesbackupsize, PU_STATIC, NULL);
-	else
-		M_Memcpy(statesbackup, states, sizeof(states));
-
-	// Mobj info
-	mobjinfobackupsize = lzf_compress(mobjinfo, sizeof(mobjinfo), mobjinfobackup, sizeof(mobjinfo));
-	if (mobjinfobackupsize > 0)
-		mobjinfobackup = Z_Realloc(mobjinfobackup, mobjinfobackupsize, PU_STATIC, NULL);
-	else
-		M_Memcpy(mobjinfobackup, mobjinfo, sizeof(mobjinfo));
-
-	//Skincolor info
-	skincolorsbackupsize = lzf_compress(skincolors, sizeof(skincolors), skincolorsbackup, sizeof(skincolors));
-	if (skincolorsbackupsize > 0)
-		skincolorsbackup = Z_Realloc(skincolorsbackup, skincolorsbackupsize, PU_STATIC, NULL);
-	else
-		M_Memcpy(skincolorsbackup, skincolors, sizeof(skincolors));
-#endif
-}
-
-void P_ResetData(INT32 flags)
-{
-#ifndef ALLOW_RESETDATA
-	(void)flags;
-	CONS_Alert(CONS_NOTICE, M_GetText("P_ResetData(): not supported in this build.\n"));
-#else
-	if (flags & 1)
-	{
-		if (sprnamesbackupsize > 0)
-			lzf_decompress(sprnamesbackup, sprnamesbackupsize, sprnames, sizeof(sprnames));
-		else
-			M_Memcpy(sprnames, sprnamesbackup, sizeof(sprnamesbackup));
-	}
-
-	if (flags & 2)
-	{
-		if (statesbackupsize > 0)
-			lzf_decompress(statesbackup, statesbackupsize, states, sizeof(states));
-		else
-			M_Memcpy(states, statesbackup, sizeof(statesbackup));
-	}
-
-	if (flags & 4)
-	{
-		if (mobjinfobackupsize > 0)
-			lzf_decompress(mobjinfobackup, mobjinfobackupsize, mobjinfo, sizeof(mobjinfo));
-		else
-			M_Memcpy(mobjinfo, mobjinfobackup, sizeof(mobjinfobackup));
-	}
-
-	if (flags & 8)
-	{
-		if (skincolorsbackupsize > 0)
-			lzf_decompress(skincolorsbackup, skincolorsbackupsize, skincolors, sizeof(skincolors));
-		else
-			M_Memcpy(skincolors, skincolorsbackup, sizeof(skincolorsbackup));
-	}
-#endif
 }

@@ -22,6 +22,7 @@
 
 #define FINEANGLES 8192
 #define FINEMASK (FINEANGLES - 1)
+#define TANMASK 4095
 #define ANGLETOFINESHIFT 19 // 0x100000000 to 0x2000
 #define FINEANGLE_C(x) ((FixedAngle((x)*FRACUNIT)>>ANGLETOFINESHIFT) & FINEMASK) // ((x*(ANGLE_45/45))>>ANGLETOFINESHIFT) & FINEMASK
 
@@ -107,10 +108,10 @@ boolean FV3_InsidePolygon(const vector3_t *vIntersection, const vector3_t *Poly,
 boolean FV3_IntersectedPolygon(const vector3_t *vPoly, const vector3_t *vLine, const INT32 vertexCount, vector3_t *collisionPoint);
 void FV3_Rotate(vector3_t *rotVec, const vector3_t *axisVec, const angle_t angle);
 /// Fixed Point Matrix functions
-matrix_t *FM_Rotate(matrix_t *dest, angle_t angle, fixed_t x, fixed_t y, fixed_t z);
-matrix_t *FM_RotateX(matrix_t *dest, angle_t rad);
-matrix_t *FM_RotateY(matrix_t *dest, angle_t rad);
-matrix_t *FM_RotateZ(matrix_t *dest, angle_t rad);
+oldmatrix_t *FM_Rotate(oldmatrix_t *dest, angle_t angle, fixed_t x, fixed_t y, fixed_t z);
+oldmatrix_t *FM_RotateX(oldmatrix_t *dest, angle_t rad);
+oldmatrix_t *FM_RotateY(oldmatrix_t *dest, angle_t rad);
+oldmatrix_t *FM_RotateZ(oldmatrix_t *dest, angle_t rad);
 
 // The table values in tables.c are calculated with this many fractional bits.
 #define FINE_FRACBITS 16
