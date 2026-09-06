@@ -1961,17 +1961,6 @@ void R_GetPivotVectorFromSpriteInfo(vector2_t* out,
 				    spriteinfo_t* sprinfo,
 				    size_t frame)
 {
-	if (sprinfo->available)
-	{
-		out->x = (sprinfo->pivot[frame].x * FRACUNIT);
-		out->y = (sprinfo->pivot[frame].y * FRACUNIT);
-	}
-	/*else if (sprinfo->available & SPRINFO_DEFAULT_PIVOT)
-	{
-		out->x = (sprinfo->pivot[SPRINFO_DEFAULT_PIVOT].x * FRACUNIT);
-		out->y = (sprinfo->pivot[SPRINFO_DEFAULT_PIVOT].y * FRACUNIT);
-	}*/
-	else
 	{
 		out->x = defaultpiv->x;
 		out->y = defaultpiv->y;
@@ -2275,7 +2264,7 @@ static void R_ProjectSprite(mobj_t *thing)
 	spritexscale = interp.spritexscale;
 	spriteyscale = interp.spriteyscale;
 
-	fixed_t highresscale = FRACUNIT;
+	highresscale = FRACUNIT;
 
 	if (thing->skin && ((skin_t *)thing->skin)->flags & SF_HIRES)
 	{
