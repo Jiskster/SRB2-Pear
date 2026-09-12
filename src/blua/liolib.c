@@ -396,18 +396,13 @@ static int io_readlump(lua_State *L)
 	data = Z_Malloc(size + 1, PU_STATIC, NULL);
 	W_ReadLumpPwad(wadnum, lumpnum, data);
 
-  // clean up windows escape key
-  // from Got_Saycmd
-  char *ptr;
-
-  ptr = data;
-	while (*ptr != '\0')
-	{
-	  if (*ptr == '\r')
-			*ptr = '\x01'; // blank it instead of deleting
-
-		ptr++;
-	}
+  // clean up windows escape key (aka /r)
+  char *src, *dst;
+  for (src = dst = data; *src != '\0'; src++) {
+      *dst = *src;
+      if (*dst != '\r') dst++;
+  }
+  *dst = '\0';
 
 	lua_pushlstring(L, data, size);
 
