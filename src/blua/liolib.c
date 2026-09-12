@@ -26,6 +26,7 @@
 #include "../lua_script.h"
 #include "../m_misc.h"
 #include "../i_time.h"
+#include "../z_zone.h"
 
 
 #define IO_INPUT	1
@@ -302,6 +303,105 @@ static int io_openlocal (lua_State *L) {
 	return (*pf == NULL) ? pushresult(L, 0, filename) : 1;
 }
 
+// return the contents of a lump
+static int io_readlump(lua_State *L)
+{
+	const char *filename = luaL_checkstring(L, 1);
+	const char *mode = luaL_optstring(L, 2, "");
+
+	size_t size;
+	char *data;
+
+	UINT16 lumpnum;
+	UINT16 wadnum = numwadfiles - 1;
+
+	boolean wadvalid = false;
+	boolean lumpvalid = false;
+
+	int direction = -1;
+	boolean subfolders = (strchr(filename, '/') == NULL);
+
+	// no empty input
+	if (filename[0] == '\0')
+		return luaL_error(L, "filename cannot be empty");
+
+	for (size_t i = 0; i < strlen(mode); i++)
+	{
+		switch(mode[i])
+		{
+			case 'f': // scan Forward from the start
+				direction = 1;
+				wadnum = 0;
+				break;
+			case 'l': // only search Last addon (useful in an AddonLoaded hook)
+				direction = 1;
+				wadnum = numwadfiles - 1;
+				break;
+			default:
+				break;
+		}
+	}
+
+	// wadnum is unsigned; check for -1 directly.
+	for (; wadnum != (UINT16)-1 && wadnum <= numwadfiles-1; wadnum += direction)
+	{
+		wadfile_t *wad = wadfiles[wadnum];
+
+		if (!wad->important)
+			continue;
+
+		// ignore luas and socs
+		if (wad->type == RET_PK3 || wad->type == RET_WAD || wad->type == RET_FOLDER)
+		{
+			wadvalid = true;
+
+			// get lump number
+			if (subfolders)
+			{
+				lumpinfo_t *lump_p = wad->lumpinfo;
+				lumpnum = INT16_MAX;
+				for (INT32 i = 0; i < wad->numlumps; i++, lump_p++)
+				{
+					const char *fullname = strrchr(lump_p->fullname, '/');
+					fullname = fullname ? fullname + 1 : lump_p->fullname;
+
+					if (!strnicmp(filename, fullname, strlen(filename)))
+					{
+						lumpnum = i;
+						break;
+					}
+				}
+			}
+			else
+				lumpnum = W_CheckNumForFullNamePK3(filename, wadnum, 0);
+
+			// lump exists? nice
+			if (lumpnum != INT16_MAX && !W_IsLumpFolder(wadnum, lumpnum))
+			{
+				lumpvalid = true;
+				break;
+			}
+		}
+	}
+
+	if (!wadvalid)
+		return luaL_error(L, "no PK3s, WADs, or folders were found");
+
+	// return nil if no lump was found
+	if (!lumpvalid)
+		return 0;
+
+	// read lump data
+	size = W_LumpLengthPwad(wadnum, lumpnum);
+	data = Z_Malloc(size + 1, PU_STATIC, NULL);
+	W_ReadLumpPwad(wadnum, lumpnum, data);
+
+	lua_pushlstring(L, data, size);
+
+	Z_Free(data);
+
+	return 1;
+}
 
 void Got_LuaFile(UINT8 **cp, INT32 playernum)
 {
@@ -624,6 +724,7 @@ static const luaL_Reg iolib[] = {
   {"close", io_close},
   {"open", io_open},
   {"openlocal", io_openlocal},
+  {"readlump", io_readlump},
   {"tmpfile", io_tmpfile},
   {"type", io_type},
   {NULL, NULL}
